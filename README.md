@@ -1,3 +1,5 @@
+This example comes from https://github.com/miguelgrinberg/flask-celery-example
+
 Using Celery with Flask
 =======================
 
