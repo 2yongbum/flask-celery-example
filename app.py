@@ -17,10 +17,13 @@ app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
 celery.conf.update(app.config)
 
-bbb = 0
+class B:
+    def __init__(self):
+        self.b = 0
+bbb = B()
 
 @celery.task(bind=True)
-def long_task(self, aaa):
+def long_task(self):
     """Background task that runs a long function with progress reports."""
     verb = ['Starting up', 'Booting', 'Repairing', 'Loading', 'Checking']
     adjective = ['master', 'radiant', 'silent', 'harmonic', 'fast']
@@ -29,15 +32,14 @@ def long_task(self, aaa):
     total = random.randint(10, 50)
     for i in range(total):
         if not message or random.random() < 0.25:
-            message = '{0} {1} {2} {3}...'.format(aaa, random.choice(verb),
+            message = '{0} {1} {2} {3}...'.format(bbb.b, random.choice(verb),
                                               random.choice(adjective),
                                               random.choice(noun))
         self.update_state(state='PROGRESS',
                           meta={'current': i, 'total': total,
                                 'status': message})
-        time.sleep(0.1)
-    if not aaa:
-        aaa = 'world'
+        bbb.b += 1
+        time.sleep(1)
     return {'current': 100, 'total': 100, 'status': 'Task completed!',
             'result': total}
 
@@ -51,9 +53,7 @@ def index():
 
 @app.route('/longtask', methods=['POST'])
 def longtask():
-    global bbb
-    bbb += 1
-    task = long_task.apply_async((bbb,))
+    task = long_task.apply_async()
     return jsonify({}), 202, {'Location': url_for('taskstatus',
                                                   task_id=task.id)}
 
